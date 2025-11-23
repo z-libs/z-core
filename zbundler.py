@@ -46,7 +46,9 @@ def create_bundle(source_path, common_path, output_path):
 
     processed_source = strip_local_include(source_code, COMMON_FILENAME)
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    output_dir = os.path.dirname(output_path)
+    if output_dir:  # Only try to create dirs if there IS a directory path
+        os.makedirs(output_dir, exist_ok=True)
     
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write("/* \n * GENERATED FILE - DO NOT EDIT DIRECTLY\n")
