@@ -24,7 +24,7 @@ A Python build script that generates single-header libraries.
 
 ### As a Dependency in a Library Repo
 
-To use `z-core` in a library like `zvec`:
+To use `z-core` in a library like `zvec.h`:
 
 ```bash
 git submodule add https://github.com/z-libs/z-core.git z-core
