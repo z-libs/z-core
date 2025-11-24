@@ -8,11 +8,13 @@ It is designed to be included as a **Git Submodule** in your specific library re
 
 ## Contents
 
-### `zcommon.h` (Shared Definitions)
+### 1. `zcommon.h` (Shared Definitions)
 A lightweight header that standardizes:
 * **Return Codes:** `Z_OK`, `Z_ERR`, `Z_FOUND`.
-* **Memory Management:** Wrappers for `malloc`, `realloc`, and `free`.
-  * Allows users to define `Z_MALLOC` globally to override the allocator (e.g., for custom arenas or embedded systems).
+* **Memory Management:** Wrappers for `malloc`, `calloc`, `realloc`, and `free`.
+  * **Default:** Uses `<stdlib.h>`.
+  * **Override:** Users can define `Z_MALLOC`, `Z_CALLOC`, `Z_REALLOC`, and `Z_FREE` before including any z-lib.
+  * **Note:** It is strongly recommended to override **all four** macros together to avoid mixing memory allocators (e.g., allocating with an arena but resizing with standard realloc).
 
 ### `zbundler.py` (The Builder)
 A Python build script that generates single-header libraries.
