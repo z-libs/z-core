@@ -19,4 +19,15 @@
     #define Z_FREE(p)          free(p)
 #endif
 
+// Compiler Extensions (Optional).
+// We check for GCC/Clang features to enable RAII-style cleanup.
+// Define Z_NO_EXTENSIONS to disable this manually.
+#if !defined(Z_NO_EXTENSIONS) && (defined(__GNUC__) || defined(__clang__))
+    #define Z_HAS_CLEANUP 1
+    #define Z_CLEANUP(func) __attribute__((cleanup(func)))
+#else
+    #define Z_HAS_CLEANUP 0
+    #define Z_CLEANUP(func) 
+#endif
+
 #endif
