@@ -1,4 +1,3 @@
-
 import os
 import re
 import sys
@@ -21,7 +20,7 @@ def strip_local_include(content, header_name):
     It matches quotes specifically, leaving <stdlib.h> alone.
     """
     pattern = re.compile(fr'^\s*#include\s*"{re.escape(header_name)}".*$', re.MULTILINE)
-    return pattern.sub(f'// [Bundled] "{header_name}" is included inline below', content)
+    return pattern.sub(f'// [Bundled] "{header_name}" is included inline in this same file', content)
 
 def create_bundle(source_path, common_path, output_path):
     print(f"Bundling:\n  Source: {source_path}\n  Common: {common_path}\n  Output: {output_path}")
@@ -51,8 +50,12 @@ def create_bundle(source_path, common_path, output_path):
         os.makedirs(output_dir, exist_ok=True)
     
     with open(output_path, 'w', encoding='utf-8') as f:
-        f.write("/* \n * GENERATED FILE - DO NOT EDIT DIRECTLY\n")
+        f.write("/*\n")
+        f.write(" * GENERATED FILE - DO NOT EDIT DIRECTLY\n")
         f.write(f" * Source: {os.path.basename(source_path)}\n")
+        f.write(" *\n")
+        f.write(" * This file is part of the z-libs collection: https://github.com/z-libs\n")
+        f.write(" * Licensed under the MIT License.\n")
         f.write(" */\n\n")
         
         f.write(common_payload)
