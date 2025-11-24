@@ -14,6 +14,7 @@
 #ifndef Z_MALLOC
     #include <stdlib.h>
     #define Z_MALLOC(sz)       malloc(sz)
+    #define Z_CALLOC(n, sz)    calloc(n, sz)
     #define Z_REALLOC(p, sz)   realloc(p, sz)
     #define Z_FREE(p)          free(p)
 #endif
