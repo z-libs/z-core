@@ -45,7 +45,7 @@
 // #define Z_GROWTH_FACTOR(c)  ((c) * 3 / 2) // 1.5x (Better for fragmentation)
 // #define Z_GROWTH_FACTOR(c)  ((c) + 16)    // Linear (Not recommended)
 #ifndef Z_GROWTH_FACTOR
-    #define Z_GROWTH_FACTOR(cap)  ((cap) * 2)
+    #define Z_GROWTH_FACTOR(cap) ((cap) == 0 ? 32 : (cap) * 2)
 #endif
 
 #endif
