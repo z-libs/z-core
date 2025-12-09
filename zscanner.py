@@ -5,23 +5,24 @@ import sys
 
 # Regex patterns to capture the type definitions
 # Capture groups: (ActualType, ShortName)
-REGEX_VEC  = re.compile(r"DEFINE_VEC_TYPE\s*\(\s*(.+?)\s*,\s*(\w+)\s*\)")
-REGEX_LIST = re.compile(r"DEFINE_LIST_TYPE\s*\(\s*(.+?)\s*,\s*(\w+)\s*\)")
+REGEX_VEC    = re.compile(r"DEFINE_VEC_TYPE\s*\(\s*(.+?)\s*,\s*(\w+)\s*\)")
+REGEX_LIST   = re.compile(r"DEFINE_LIST_TYPE\s*\(\s*(.+?)\s*,\s*(\w+)\s*\)")
+REGEX_RESULT = re.compile(r"DEFINE_RESULT\s*\(\s*(.+?)\s*,\s*(\w+)\s*\)")
 
 # Capture groups: (KeyType, ValType, ShortName)
-REGEX_MAP  = re.compile(r"DEFINE_MAP_TYPE\s*\(\s*(.+?)\s*,\s*(.+?)\s*,\s*(\w+)\s*\)")
+REGEX_MAP        = re.compile(r"DEFINE_MAP_TYPE\s*\(\s*(.+?)\s*,\s*(.+?)\s*,\s*(\w+)\s*\)")
 REGEX_STABLE_MAP = re.compile(r"DEFINE_STABLE_MAP_TYPE\s*\(\s*(.+?)\s*,\s*(.+?)\s*,\s*(\w+)\s*\)")
 
-# Files to ignore (The library headers themselves contain macro definitions that look like usage)
-IGNORE_FILES = {"zvec.h", "zlist.h", "zmap.h", "zstr.h", "zcommon.h"}
+# Files to ignore...
+IGNORE_FILES = {"zvec.h", "zlist.h", "zmap.h", "zstr.h", "zcommon.h", "zerror.h"}
 
 def scan_directory(root_dir, output_file_name):
-    # Sets to store unique tuples (avoiding duplicates)
     registry = {
         "VEC": set(),
         "LIST": set(),
         "MAP": set(),
-        "STABLE_MAP": set()
+        "STABLE_MAP": set(),
+        "RESULT": set()
     }
     
     print(f"Scanning {root_dir}...")
@@ -38,21 +39,20 @@ def scan_directory(root_dir, output_file_name):
                     with open(path, 'r', encoding='utf-8') as f:
                         content = f.read()
                         
-                        # Find Vectors
                         for match in REGEX_VEC.findall(content):
                             registry["VEC"].add(match)
 
-                        # Find Lists
                         for match in REGEX_LIST.findall(content):
                             registry["LIST"].add(match)
 
-                        # Find Maps (Standard)
                         for match in REGEX_MAP.findall(content):
                             registry["MAP"].add(match)
 
-                        # Find Maps (Stable)
                         for match in REGEX_STABLE_MAP.findall(content):
                             registry["STABLE_MAP"].add(match)
+
+                        for match in REGEX_RESULT.findall(content):
+                            registry["RESULT"].add(match)
                             
                 except Exception as e:
                     print(f"Skipping {fname}: {e}")
@@ -74,41 +74,39 @@ def generate_header(registry, output_file):
         # VECTORS
         f.write("/* Vectors */\n")
         f.write("#define Z_AUTOGEN_VECS(X) \\\n")
-        if not registry["VEC"]:
-            f.write("    /* No vectors found */\n")
-        else:
-            for type_t, name in sorted(registry["VEC"], key=lambda x: x[1]):
-                f.write(f"    X({type_t.strip()}, {name}) \\\n")
+        for type_t, name in sorted(registry["VEC"], key=lambda x: x[1]):
+            f.write(f"    X({type_t.strip()}, {name}) \\\n")
         f.write("\n")
 
         # LISTS
         f.write("/* Lists */\n")
         f.write("#define Z_AUTOGEN_LISTS(X) \\\n")
-        if not registry["LIST"]:
-            f.write("    /* No lists found */\n")
-        else:
-            for type_t, name in sorted(registry["LIST"], key=lambda x: x[1]):
-                f.write(f"    X({type_t.strip()}, {name}) \\\n")
+        for type_t, name in sorted(registry["LIST"], key=lambda x: x[1]):
+            f.write(f"    X({type_t.strip()}, {name}) \\\n")
         f.write("\n")
         
-        # MAPS (Standard)
+        # MAPS
         f.write("/* Maps */\n")
         f.write("#define Z_AUTOGEN_MAPS(X) \\\n")
-        if not registry["MAP"]:
-            f.write("    /* No maps found */\n")
-        else:
-            for key_t, val_t, name in sorted(registry["MAP"], key=lambda x: x[2]):
-                f.write(f"    X({key_t.strip()}, {val_t.strip()}, {name}) \\\n")
+        for key_t, val_t, name in sorted(registry["MAP"], key=lambda x: x[2]):
+            f.write(f"    X({key_t.strip()}, {val_t.strip()}, {name}) \\\n")
         f.write("\n")
 
-        # MAPS (Stable)
+        # STABLE MAPS
         f.write("/* Stable Maps */\n")
         f.write("#define Z_AUTOGEN_STABLE_MAPS(X) \\\n")
-        if not registry["STABLE_MAP"]:
-            f.write("    /* No stable maps found */\n")
+        for key_t, val_t, name in sorted(registry["STABLE_MAP"], key=lambda x: x[2]):
+            f.write(f"    X({key_t.strip()}, {val_t.strip()}, {name}) \\\n")
+        f.write("\n")
+
+        # RESULTS
+        f.write("/* Results */\n")
+        f.write("#define Z_AUTOGEN_RESULTS(X) \\\n")
+        if not registry["RESULT"]:
+            f.write("    /* No results found */\n")
         else:
-            for key_t, val_t, name in sorted(registry["STABLE_MAP"], key=lambda x: x[2]):
-                f.write(f"    X({key_t.strip()}, {val_t.strip()}, {name}) \\\n")
+            for type_t, name in sorted(registry["RESULT"], key=lambda x: x[1]):
+                f.write(f"    X({type_t.strip()}, {name}) \\\n")
         f.write("\n")
 
         f.write("#endif // Z_REGISTRY_H\n")
@@ -119,8 +117,6 @@ if __name__ == "__main__":
     parser.add_argument("out", help="Output header file (e.g., z_registry.h)")
     
     args = parser.parse_args()
-    
-    # Pass output filename to scan_directory for exclusion
     reg = scan_directory(args.src, args.out)
     generate_header(reg, args.out)
     print("Done.")
