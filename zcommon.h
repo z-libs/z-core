@@ -56,7 +56,6 @@
 #define DEFINE_LIST_TYPE(T, Name)
 #define DEFINE_MAP_TYPE(Key, Val, Name)
 #define DEFINE_STABLE_MAP_TYPE(Key, Val, Name)
-#define DEFINE_RESULT(T, Name)
 
 // Token concatenation macros (useful for unique variable names in defer)
 #define Z_CONCAT_(a, b) a ## b
