@@ -7,6 +7,9 @@
  * used across all ZDK libraries.
  *
  * License: MIT
+ * Author: Zuhaitz
+ * Repository: https://github.com/z-libs/z-core
+ * Version: 1.0.0
  */
 
 #ifndef ZCOMMON_H
@@ -46,39 +49,43 @@
 // Compiler extensions and optimization.
 
 // Type inference (typeof)
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
-    #define Z_TYPEOF(x) typeof(x)
-    #define Z_HAS_TYPEOF 1
+#ifdef __cplusplus
+#   include <type_traits>
+#   define Z_TYPEOF(x) typename std::remove_reference<decltype(x)>::type
+#   define Z_HAS_TYPEOF 1
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+#   define Z_TYPEOF(x) typeof(x)
+#   define Z_HAS_TYPEOF 1
 #elif defined(__GNUC__) || defined(__clang__) || defined(__TINYC__)
-    #define Z_TYPEOF(x) __typeof__(x)
-    #define Z_HAS_TYPEOF 1
+#   define Z_TYPEOF(x) __typeof__(x)
+#   define Z_HAS_TYPEOF 1
 #else
-    #define Z_HAS_TYPEOF 0
+#   define Z_HAS_TYPEOF 0
 #endif
 
 // Extensions (cleanup, attributes, branch prediction)
 #if !defined(Z_NO_EXTENSIONS) && (defined(__GNUC__) || defined(__clang__) || defined(__TINYC__))
         
-    #define Z_HAS_CLEANUP 1
-    #define Z_CLEANUP(func) __attribute__((cleanup(func)))
-    #define Z_NODISCARD     __attribute__((warn_unused_result))
+#   define Z_HAS_CLEANUP 1
+#   define Z_CLEANUP(func) __attribute__((cleanup(func)))
+#   define Z_NODISCARD     __attribute__((warn_unused_result))
     
     // TCC supports attributes but NOT __builtin_expect
-    #if defined(__TINYC__)
-        #define Z_LIKELY(x)     (x)
-        #define Z_UNLIKELY(x)   (x)
-    #else
-        #define Z_LIKELY(x)     __builtin_expect(!!(x), 1)
-        #define Z_UNLIKELY(x)   __builtin_expect(!!(x), 0)
-    #endif
+#   if defined(__TINYC__)
+#       define Z_LIKELY(x)     (x)
+#       define Z_UNLIKELY(x)   (x)
+#   else
+#       define Z_LIKELY(x)     __builtin_expect(!!(x), 1)
+#       define Z_UNLIKELY(x)   __builtin_expect(!!(x), 0)
+#   endif
 
 #else
     // Fallback for MSVC or strict standard C.
-    #define Z_HAS_CLEANUP 0
-    #define Z_CLEANUP(func) 
-    #define Z_NODISCARD
-    #define Z_LIKELY(x)     (x)
-    #define Z_UNLIKELY(x)   (x)
+#   define Z_HAS_CLEANUP 0
+#   define Z_CLEANUP(func) 
+#   define Z_NODISCARD
+#   define Z_LIKELY(x)     (x)
+#   define Z_UNLIKELY(x)   (x)
 
 #endif
 
