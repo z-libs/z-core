@@ -19,25 +19,15 @@
 #include <string.h>
 
 // Return codes and error handling.
-
-// Success.
 #define Z_OK          0
 #define Z_FOUND       1   // Element found (positive).
-
-// Generic errors.
 #define Z_ERR        -1   // Generic error.
-
-// Resource errors.
 #define Z_ENOMEM     -2   // Out of memory (malloc/realloc failed).
-
-// Access errors.
 #define Z_EOOB       -3   // Out of bounds / range error.
 #define Z_EEMPTY     -4   // Container is empty.
 #define Z_ENOTFOUND  -5   // Element not found.
-
-// Logic errors.
 #define Z_EINVAL     -6   // Invalid argument / parameter.
-#define Z_EEXIST     -7   // Element already exists (for example, unique keys).
+#define Z_EEXIST     -7   // Element already exists.
 
 // Memory management.
 
@@ -55,31 +45,40 @@
 
 // Compiler extensions and optimization.
 
-/* * We check for GCC/Clang features to enable RAII-style cleanup and optimization hints.
- * Define Z_NO_EXTENSIONS to disable this manually.
- */
-#if !defined(Z_NO_EXTENSIONS) && (defined(__GNUC__) || defined(__clang__))
+// Type inference (typeof)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+    #define Z_TYPEOF(x) typeof(x)
+    #define Z_HAS_TYPEOF 1
+#elif defined(__GNUC__) || defined(__clang__) || defined(__TINYC__)
+    #define Z_TYPEOF(x) __typeof__(x)
+    #define Z_HAS_TYPEOF 1
+#else
+    #define Z_HAS_TYPEOF 0
+#endif
+
+// Extensions (cleanup, attributes, branch prediction)
+#if !defined(Z_NO_EXTENSIONS) && (defined(__GNUC__) || defined(__clang__) || defined(__TINYC__))
         
-#   define Z_HAS_CLEANUP 1
+    #define Z_HAS_CLEANUP 1
+    #define Z_CLEANUP(func) __attribute__((cleanup(func)))
+    #define Z_NODISCARD     __attribute__((warn_unused_result))
     
-    // RAII cleanup (destructors).
-    // Usage: zvec_autofree(Int) v = zvec_init(Int);
-#   define Z_CLEANUP(func) __attribute__((cleanup(func)))
-    
-    // Warn if the return value (e.g., an Error Result) is ignored.
-#   define Z_NODISCARD     __attribute__((warn_unused_result))
-    
-    // Branch prediction hints for the compiler.
-#   define Z_LIKELY(x)     __builtin_expect(!!(x), 1)
-#   define Z_UNLIKELY(x)   __builtin_expect(!!(x), 0)
+    // TCC supports attributes but NOT __builtin_expect
+    #if defined(__TINYC__)
+        #define Z_LIKELY(x)     (x)
+        #define Z_UNLIKELY(x)   (x)
+    #else
+        #define Z_LIKELY(x)     __builtin_expect(!!(x), 1)
+        #define Z_UNLIKELY(x)   __builtin_expect(!!(x), 0)
+    #endif
 
 #else
-        
-#   define Z_HAS_CLEANUP 0
-#   define Z_CLEANUP(func) 
-#   define Z_NODISCARD
-#   define Z_LIKELY(x)     (x)
-#   define Z_UNLIKELY(x)   (x)
+    // Fallback for MSVC or strict standard C.
+    #define Z_HAS_CLEANUP 0
+    #define Z_CLEANUP(func) 
+    #define Z_NODISCARD
+    #define Z_LIKELY(x)     (x)
+    #define Z_UNLIKELY(x)   (x)
 
 #endif
 
@@ -93,6 +92,7 @@
 #define DEFINE_LIST_TYPE(T, Name)
 #define DEFINE_MAP_TYPE(Key, Val, Name)
 #define DEFINE_STABLE_MAP_TYPE(Key, Val, Name)
+#define DEFINE_TREE_TYPE(Key Val Name)
 
 // Token concatenation macros (useful for unique variable names in macros).
 #define Z_CONCAT_(a, b) a ## b
