@@ -92,7 +92,7 @@
 #define DEFINE_LIST_TYPE(T, Name)
 #define DEFINE_MAP_TYPE(Key, Val, Name)
 #define DEFINE_STABLE_MAP_TYPE(Key, Val, Name)
-#define DEFINE_TREE_TYPE(Key Val Name)
+#define DEFINE_TREE_TYPE(Key, Val, Name)
 
 // Token concatenation macros (useful for unique variable names in macros).
 #define Z_CONCAT_(a, b) a ## b
