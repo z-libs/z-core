@@ -8,7 +8,7 @@ It is designed to be included as a **Git Submodule** in your specific library re
 
 ## Contents
 
-### 1. `zcommon.h` (Shared Definitions)
+### `zcommon.h` (Shared Definitions)
 A lightweight header that standardizes:
 * **Return Codes:** `Z_OK`, `Z_ERR`, `Z_FOUND`.
 * **Memory Management:** Wrappers for `malloc`, `calloc`, `realloc`, and `free`.
