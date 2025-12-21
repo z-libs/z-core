@@ -174,7 +174,6 @@ int main(int argc, char **argv)
     bool in_example = false;
     bool skip_next = false;
     bool is_private = false;
-    bool in_group = false;
 
     zfile_reader reader = zfile_reader_open(input_path);
     zstr_view raw_line;
@@ -277,11 +276,11 @@ int main(int argc, char **argv)
                 if (is_group) 
                 {
                     zstr_fmt(&doc_content, "| Function | Description |\n|---|---|\n");
-                    mode = MODE_TABLE; in_group = true;
+                    mode = MODE_TABLE; 
                 } 
                 else 
                 {
-                    mode = MODE_TEXT; in_group = false;
+                    mode = MODE_TEXT; 
                 }
                 zstr_clear(&pending_desc);
             }
@@ -294,7 +293,6 @@ int main(int argc, char **argv)
             }
             else if (zstr_view_starts_with(content, "@endgroup")) 
             { 
-                in_group = false; 
                 mode = MODE_TEXT; 
             }
             else if (zstr_view_starts_with(content, "@struct")) 
@@ -315,7 +313,7 @@ int main(int argc, char **argv)
             else if (zstr_view_starts_with(content, "@table")) 
             {
                 zstr_view title = zstr_view_trim(zstr_sub(content, 6, content.len - 6));
-                zstr_fmt(&doc_content, "\n### %.*s\n\n", ZSV_ARG(title));
+                zstr_fmt(&doc_content, "\n**%.*s**\n\n", ZSV_ARG(title));
                 zstr_fmt(&doc_content, "| %s |\n", zstr_cstr(&current_columns));
                 zstr_cat(&doc_content, "|");
                 zstr_view cols_v = zstr_view_from(zstr_cstr(&current_columns));
@@ -333,6 +331,11 @@ int main(int argc, char **argv)
                 zstr_view cols = zstr_view_trim(zstr_sub(content, 8, content.len - 8));
                 zstr_free(&current_columns); 
                 current_columns = zstr_from_view(cols);
+            }
+            else if (zstr_view_starts_with(content, "@row")) 
+            {
+                zstr_view row = zstr_view_trim(zstr_sub(content, 4, content.len - 4));
+                zstr_fmt(&doc_content, "| %.*s |\n", ZSV_ARG(row));
             }
             else if (zstr_view_starts_with(content, "@separator")) 
             {
